@@ -2,7 +2,7 @@
 
 **Project:** JB-AI  
 **Owner:** Team Synvo (Founder: Alex)  
-**Demo:** https://team-synvo.github.io/JB-ai/
+**Demo:** https://team-synvo.github.io/jb-ai/
 
 ## Summary
 This repository hosts an educational research demonstration exploring how different regions may interact with AI model behavior. The project is intended for academic and technical study only — to help researchers and developers better understand model responses and regional variance in deployments.
