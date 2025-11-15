@@ -1,8 +1,40 @@
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 5000;
+const VISITS_FILE = path.join(__dirname, 'visits.json');
+
+// Initialize visits counter
+let visitorCount = 0;
+
+// Load existing visitor count from file
+function loadVisitorCount() {
+  try {
+    if (fs.existsSync(VISITS_FILE)) {
+      const data = fs.readFileSync(VISITS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      visitorCount = parsed.total || 0;
+      console.log(`📊 Loaded visitor count: ${visitorCount}`);
+    }
+  } catch (error) {
+    console.error('Error loading visitor count:', error);
+    visitorCount = 0;
+  }
+}
+
+// Save visitor count to file
+function saveVisitorCount() {
+  try {
+    fs.writeFileSync(VISITS_FILE, JSON.stringify({ total: visitorCount }), 'utf8');
+  } catch (error) {
+    console.error('Error saving visitor count:', error);
+  }
+}
+
+// Initialize on startup
+loadVisitorCount();
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -17,6 +49,23 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
+  // API endpoint to increment visitor count
+  if (req.method === 'POST' && req.url === '/api/visit') {
+    visitorCount++;
+    saveVisitorCount();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, total: visitorCount }));
+    return;
+  }
+
+  // API endpoint to get current visitor count
+  if (req.method === 'GET' && req.url === '/api/visits') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ total: visitorCount }));
+    return;
+  }
+
+  // Serve static files
   let filePath = req.url === '/' ? '/index.html' : req.url;
   filePath = path.join(__dirname, filePath);
   
@@ -33,7 +82,12 @@ const server = http.createServer((req, res) => {
         res.end('Server Error: ' + err.code, 'utf-8');
       }
     } else {
-      res.writeHead(200, { 'Content-Type': contentType });
+      res.writeHead(200, { 
+        'Content-Type': contentType,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
       res.end(content, 'utf-8');
     }
   });
