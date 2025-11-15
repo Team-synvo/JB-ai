@@ -1,49 +1,14 @@
 
-// Visitor Tracking - Server-side
-async function initVisitorTracking() {
+// Visitor Tracking - Client-side only for static hosting
+function initVisitorTracking() {
     try {
-        // Check if this user has visited before
-        const hasVisited = localStorage.getItem('hasVisited');
-        
-        if (!hasVisited) {
-            // New visitor - increment counter on server
-            await fetch('/api/visit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            // Mark this user as having visited
-            localStorage.setItem('hasVisited', 'true');
+        const totalEl = document.getElementById('totalVisits');
+        if (totalEl) {
+            // For static hosting, show a placeholder or remove the counter
+            totalEl.textContent = '-';
         }
-        
-        // Always fetch and display current total
-        updateVisitorDisplay();
-        
-        // Update display every 30 seconds
-        setInterval(updateVisitorDisplay, 30000);
     } catch (error) {
         console.error('Error initializing visitor tracking:', error);
-        document.getElementById('totalVisits').textContent = 'Error';
-    }
-}
-
-async function updateVisitorDisplay() {
-    try {
-        const response = await fetch('/api/visits');
-        const data = await response.json();
-        
-        const totalEl = document.getElementById('totalVisits');
-        if (totalEl) {
-            totalEl.textContent = data.total.toLocaleString();
-        }
-    } catch (error) {
-        console.error('Error updating visitor display:', error);
-        const totalEl = document.getElementById('totalVisits');
-        if (totalEl) {
-            totalEl.textContent = 'Error';
-        }
     }
 }
 
@@ -96,7 +61,7 @@ searchInput.addEventListener('input', function(e) {
 });
 
 // Copy Code Functionality
-function copyCode(button) {
+window.copyCode = function(button) {
     const codeBlock = button.closest('.code-block');
     const code = codeBlock.querySelector('code').textContent;
 
@@ -119,11 +84,13 @@ function copyCode(button) {
                 </svg>
             `;
         }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy code:', err);
     });
 }
 
 // Toggle Instructions
-function toggleInstructions(button) {
+window.toggleInstructions = function(button) {
     const instructionsContent = button.nextElementSibling;
     const isActive = button.classList.contains('active');
 
@@ -137,7 +104,7 @@ function toggleInstructions(button) {
 }
 
 // Pill Menu Filter Functionality
-function filterContent(filter) {
+window.filterContent = function(filter) {
     const jailbreaksSections = document.querySelectorAll('.ai-section');
     const documentarySections = document.querySelectorAll('.documentary-section');
     const separators = document.querySelectorAll('.separator');
@@ -148,16 +115,20 @@ function filterContent(filter) {
     document.querySelectorAll('.pill-nav-item').forEach(pill => {
         pill.classList.remove('active');
     });
-    document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+    const activeFilter = document.querySelector(`[data-filter="${filter}"]`);
+    if (activeFilter) activeFilter.classList.add('active');
     
     // Reset search
-    searchInput.value = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    const scriptCards = document.querySelectorAll('.script-card');
     scriptCards.forEach(card => card.classList.remove('hidden'));
-    noResults.style.display = 'none';
+    const noResults = document.getElementById('noResults');
+    if (noResults) noResults.style.display = 'none';
     
     switch(filter) {
         case 'all':
-            heroSection.classList.remove('hidden');
+            if (heroSection) heroSection.classList.remove('hidden');
             jailbreaksSections.forEach(section => section.classList.remove('hidden'));
             documentarySections.forEach(section => section.classList.remove('hidden'));
             separators.forEach(sep => sep.classList.remove('hidden'));
@@ -165,7 +136,7 @@ function filterContent(filter) {
             break;
             
         case 'jailbreaks':
-            heroSection.classList.add('hidden');
+            if (heroSection) heroSection.classList.add('hidden');
             jailbreaksSections.forEach(section => section.classList.remove('hidden'));
             documentarySections.forEach(section => section.classList.add('hidden'));
             separators.forEach((sep, index) => {
@@ -176,7 +147,7 @@ function filterContent(filter) {
             break;
             
         case 'documentation':
-            heroSection.classList.add('hidden');
+            if (heroSection) heroSection.classList.add('hidden');
             jailbreaksSections.forEach(section => section.classList.add('hidden'));
             documentarySections.forEach((section, index) => {
                 if (section.id === 'how-it-works') {
@@ -190,7 +161,7 @@ function filterContent(filter) {
             break;
             
         case 'defense':
-            heroSection.classList.add('hidden');
+            if (heroSection) heroSection.classList.add('hidden');
             jailbreaksSections.forEach(section => section.classList.add('hidden'));
             documentarySections.forEach((section, index) => {
                 if (section.id === 'defense') {
